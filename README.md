@@ -16,6 +16,9 @@ Example project showing how to use the crossplane together with ArgoCD
 
 __The idea is "simple": Why not treat infrastructure deployments/provisioning the same way as application deployments?!__ An ideal combination would be crossplane as control plane framework, which manages infrastructure through the Kubernetes api together with ArgoCD as [GitOps](https://www.gitops.tech/) framework to have everything in sync with our version control system.
 
+Also it is used as an example in these three [iX Magazin](https://www.heise.de/ix/) issues (simply click on the magazine covers to access the full articles):
+
+[![](docs/ixmagazin_frontcover_05_2025.png)](https://www.codecentric.de/wissens-hub/fachmedien/tutorial-gitops-mit-crossplane-teil-1-beyond-ci-cd) [![](docs/ixmagazin_frontcover_06_2025.png)](https://www.codecentric.de/wissens-hub/fachmedien/tutorial-gitops-crossplane-basisinstallation) [![](docs/ixmagazin_07_2025.png)](https://www.codecentric.de/wissens-hub/fachmedien/tutorial-gitops-mit-crossplane-teil3-provider)
 
 ### TLDR: Steps from 0 to 100
 
