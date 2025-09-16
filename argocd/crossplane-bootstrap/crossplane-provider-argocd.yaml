@@ -14,7 +14,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/jonashackt/crossplane-argocd
+    repoURL: https://github.com/sq3/crossplane-argocd
     targetRevision: HEAD
     path: crossplane-contrib/provider-argocd/provider
   destination:
