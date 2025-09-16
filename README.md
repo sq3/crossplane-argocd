@@ -51,7 +51,7 @@ bash create-argocd-api-token-secret.sh
 
 
 # Bootstrap Crossplane via ArgoCD
-kubectl apply -n argocd -f argocd/crossplane-eso-bootstrap.yaml 
+kubectl apply -n argocd -f argocd/crossplane-eso-bootstrap.yaml
 
 kubectl get crd
 
@@ -117,7 +117,7 @@ kind create cluster --image kindest/node:v1.31.1 --wait 5m
 
 Before even starting to install ArgoCD, we should be aware of [some needed configuration details](https://docs.crossplane.io/knowledge-base/integrations/argo-cd-crossplane/) in order to let Argo run smootly with Crossplane.
 
-We can ignore [the mentioned health status configuration](https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/#set-health-status) in the docs, since 
+We can ignore [the mentioned health status configuration](https://docs.crossplane.io/latest/guides/crossplane-with-argo-cd/#set-health-status) in the docs, since
 
 > "Some checks are supported by the community directly in Argo’s repository. For example the Provider from pkg.crossplane.io has already been declared which means there no further configuration needed."
 
@@ -171,7 +171,7 @@ data:
     - apiGroups:
       - "*"
       kinds:
-      - ProviderConfigUsage      
+      - ProviderConfigUsage
 ```
 
 We will actually configure this while installing ArgoCD in a second. Because the question is: where exactly can we change parameters of the `argocd-cm` ConfigMap in ArgoCD?
@@ -186,7 +186,7 @@ This question boils down to another question on a higher level: How do we instal
 
 In fact the ArgoCD team itself uses this approach to deploy their own ArgoCD instances. A live deployment [is available here](https://cd.apps.argoproj.io/) and the configuration used [can be found on GitHub](https://github.com/argoproj/argoproj-deployments/tree/master/argocd).
 
-Using [Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) enables a great way of declaritively changing configuration in ConfigMaps, while using the default installation method (which [is this install.yaml](https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml)). And at the same time staying upgradable via Renovate. 
+Using [Kustomize](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) enables a great way of declaritively changing configuration in ConfigMaps, while using the default installation method (which [is this install.yaml](https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml)). And at the same time staying upgradable via Renovate.
 
 So let's first create a directory `argocd/install` in the root of our repository. Therein we create a file called [`kustomization.yaml`](argocd/install/kustomization.yaml) with the following contents:
 
@@ -315,7 +315,7 @@ metadata:
 stringData:
   name: crossplane
   url: https://charts.crossplane.io/stable
-  type: helm 
+  type: helm
 ```
 
 We need to apply it via:
@@ -348,14 +348,14 @@ spec:
     namespace: crossplane-system
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     syncOptions:
     - CreateNamespace=true
     retry:
       limit: 1
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -387,7 +387,7 @@ We can double check everything is there on the command line via:
 ```shell
 kubectl get all -n crossplane-system
 ```
-                               
+
 
 ### Create aws-creds.conf file & create AWS Provider secret
 
@@ -402,7 +402,7 @@ aws_secret_access_key = $(aws configure get aws_secret_access_key)
 " > aws-creds.conf
 ```
 
-> Don't ever check this file into source control - it holds your AWS credentials! For this repository I added `*-creds.conf` to the [.gitignore](.gitignore) file. 
+> Don't ever check this file into source control - it holds your AWS credentials! For this repository I added `*-creds.conf` to the [.gitignore](.gitignore) file.
 
 
 Now we need to use the `aws-creds.conf` file to create the Crossplane AWS Provider secret:
@@ -451,8 +451,8 @@ spec:
   # Using syncPolicy.automated here, otherwise the deployement of our Crossplane provider will fail with
   # 'Resource not found in cluster: pkg.crossplane.io/v1/Provider:provider-aws-s3'
   syncPolicy:
-    automated: 
-      prune: true     
+    automated:
+      prune: true
 ```
 
 The crucial point here is to use the `syncPolicy.automated` flag as described in the docs: https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/. Otherwise the deployment of the Crossplane `upbound-provider-aws-s3` will give the following error:
@@ -470,7 +470,7 @@ We also use the finalizer `resources-finalizer.argocd.argoproj.io finalizer` lik
 Let's apply this `Application` to our cluster also:
 
 ```shell
-kubectl apply -n argocd -f argocd/crossplane-bootstrap/crossplane-provider-aws.yaml 
+kubectl apply -n argocd -f argocd/crossplane-bootstrap/crossplane-provider-aws.yaml
 ```
 
 
@@ -531,14 +531,14 @@ spec:
   # Using syncPolicy.automated here, otherwise the deployement of our Crossplane provider will fail with
   # 'Resource not found in cluster: pkg.crossplane.io/v1/Provider:provider-aws-s3'
   syncPolicy:
-    automated: 
-      prune: true    
+    automated:
+      prune: true
 ```
 
 
 
 ```shell
-kubectl apply -n argocd -f argocd/crossplane-bootstrap/crossplane-provider-aws-config.yaml 
+kubectl apply -n argocd -f argocd/crossplane-bootstrap/crossplane-provider-aws-config.yaml
 ```
 
 
@@ -565,7 +565,7 @@ If we would use [an Application that points to a directory](https://argo-cd.read
 The Kubernetes API could not find aws.upbound.io/ProviderConfig for requested resource default/default. Make sure the "ProviderConfig" CRD is installed on the destination cluster.
 ```
 
-Since deployment order wouldn't be clear and the `Provider` manifests need to be fully deployed before the `ProviderConfig`. Otherwise the deployment fails because of missing CRDs. 
+Since deployment order wouldn't be clear and the `Provider` manifests need to be fully deployed before the `ProviderConfig`. Otherwise the deployment fails because of missing CRDs.
 
 __Wouldn't be Argo's SyncWaves feature a great match for that issue?__
 
@@ -589,7 +589,7 @@ You'd might say: ApplicationSets is the way to go today. But __App of Apps is no
 
 From that I would extract the following TLDR: If you want to bootstrap a cluster (e.g. installing tools like Crossplane), the App of Apps feature together with it's support for SyncWaves is pretty handsome. That might be the reason, the feature is described inside the `operator-manual/cluster-bootstrapping` part of the docs: https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern
 
-If you want to get your teams enabled to deploy their apps in a GitOps fashion (incl. self-service) and want a great way to use multiple manifests in apps also from within monorepos (e.g. backend, frontend, db), then [the `ApplicationSet` feature](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/) is match for you. It also generates the `Application` manifests automatically leveraging it's many generators, like `Git Generator: Directories`, `Git Generator: Files` and so on. My colleague Daniel Häcker [wrote a great post about that topic](https://www.codecentric.de/wissens-hub/blog/gitops-argocd). 
+If you want to get your teams enabled to deploy their apps in a GitOps fashion (incl. self-service) and want a great way to use multiple manifests in apps also from within monorepos (e.g. backend, frontend, db), then [the `ApplicationSet` feature](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/) is match for you. It also generates the `Application` manifests automatically leveraging it's many generators, like `Git Generator: Directories`, `Git Generator: Files` and so on. My colleague Daniel Häcker [wrote a great post about that topic](https://www.codecentric.de/wissens-hub/blog/gitops-argocd).
 
 As we're focussing on bootstrapping our cluster with ArgoCD and Crossplane, let's go with the App of Apps Pattern here.
 
@@ -597,7 +597,7 @@ As we're focussing on bootstrapping our cluster with ArgoCD and Crossplane, let'
 
 ### Implementing the App of Apps Pattern for Crossplane deployment
 
-ArgoCD Applications can be used in ArgoCD Applications - since they are normal Kubernetes CRDs. 
+ArgoCD Applications can be used in ArgoCD Applications - since they are normal Kubernetes CRDs.
 
 Therefore let's define a new top level `Application` that manages the whole Crossplane setup incl. core, Provider, ProviderConfig etc.
 
@@ -624,18 +624,18 @@ spec:
     namespace: crossplane-system
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     syncOptions:
     - CreateNamespace=true
     retry:
       limit: 1
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
-This `Application` will look for manifests at `argocd/crossplane-bootstrap` in our repository https://github.com/jonashackt/crossplane-argocd. And there all our Crossplane components are already defined as ArgoCD `Application` manifests. 
+This `Application` will look for manifests at `argocd/crossplane-bootstrap` in our repository https://github.com/jonashackt/crossplane-argocd. And there all our Crossplane components are already defined as ArgoCD `Application` manifests.
 
 Also don't forget to define the finalizers `finalizers: - resources-finalizer.argocd.argoproj.io`. Otherwise the Applications managed by this App of Apps won't be deleted and will still be running, if you delete just the App of Apps!
 
@@ -664,7 +664,7 @@ You get the point! We also add the `sync-wave` annotation to the AWS Provider in
 Now we should be able to finally apply our Crossplane App of Apps in Argo:
 
 ```shell
-kubectl apply -n argocd -f argocd/crossplane-bootstrap.yaml 
+kubectl apply -n argocd -f argocd/crossplane-bootstrap.yaml
 ```
 
 And like magic all our Crossplane components get deployed step by step in correct order:
@@ -705,7 +705,7 @@ jobs:
         uses: actions/checkout@master
 
       - name: Spin up kind
-        run: |          
+        run: |
           echo "--- Create kind cluster"
           kind create cluster --image "kindest/node:$KIND_NODE_VERSION" --wait 5m
 
@@ -719,7 +719,7 @@ jobs:
 
           echo " Install & configure ArgoCD via Kustomize - see https://stackoverflow.com/a/71692892/4964553"
           kubectl apply -k argocd/install
-          
+
           echo "--- Wait for Argo to become ready"
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --namespace argocd --timeout=300s
 
@@ -730,7 +730,7 @@ jobs:
           aws_access_key_id = $AWS_ACCESS_KEY_ID
           aws_secret_access_key = $AWS_SECRET_ACCESS_KEY
           " > aws-creds.conf
-          
+
           echo "--- Create a namespace for crossplane"
           kubectl create namespace crossplane-system
 
@@ -740,7 +740,7 @@ jobs:
       - name: Use ArgoCD's AppOfApps pattern to deploy all Crossplane components
         run: |
           echo "--- Let Argo do it's magic installing all Crossplane components"
-          kubectl apply -n argocd -f argocd/crossplane-bootstrap.yaml 
+          kubectl apply -n argocd -f argocd/crossplane-bootstrap.yaml
 
       - name: Check crossplane status
         run: |
@@ -808,12 +808,12 @@ spec:
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -860,7 +860,7 @@ TODO: Insert why here :) GitOps Pull instead of Push...
 After reading through lot's of "How to manage Secrets with GitOps articles" (like [this](https://www.redhat.com/en/blog/a-guide-to-secrets-management-with-gitops-and-kubernetes), [this](https://betterprogramming.pub/why-you-should-avoid-sealed-secrets-in-your-gitops-deployment-e50131d360dd) and [this](https://akuity.io/blog/how-to-manage-kubernetes-secrets-gitops ) to name a few), I found that there's currently no widly accepted way of doing it. But there are some recommendations. E.g. checking Secrets into Git (although encrypted) using [Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets) or [SOPS](https://github.com/getsops/sops)/[KSOPS](https://github.com/viaduct-ai/kustomize-sops) might seem like the kind of easiest solution in the first place. But they have their own caveats in the long therm. Think of multiple secrets defined in multiple projects used by multiple teams all over your Git repositories - and now do a secret or key rotation...
 
 
-The TLDR; of most (recent) articles and [GitHub discussions](https://github.com/argoproj/argo-cd/issues/1364) I distilled for me is: Use an external secret store and connect that one to your ArgoCD managed cluster. With an external secret store you get key rotation, support for serving secrets as symbolic references, usage audits and so on. Even in the case of secret or key compromisation you mostly get proven mitigations paths. 
+The TLDR; of most (recent) articles and [GitHub discussions](https://github.com/argoproj/argo-cd/issues/1364) I distilled for me is: Use an external secret store and connect that one to your ArgoCD managed cluster. With an external secret store you get key rotation, support for serving secrets as symbolic references, usage audits and so on. Even in the case of secret or key compromisation you mostly get proven mitigations paths.
 
 
 
@@ -884,7 +884,7 @@ And what's also promising, [the community seems to be growing rapidly](https://g
 
 ## Using External Secrets together with Doppler
 
-The External Secrets Operator supports a multitude of tools for secret management! Just have a look at the docs & [you'll see more than 20 tools supported](https://external-secrets.io/latest/provider/aws-secrets-manager/), featuring the well known AWS Secretes Manager, Azure Key Vault, Hashicorp Vault, Akeyless and so on. 
+The External Secrets Operator supports a multitude of tools for secret management! Just have a look at the docs & [you'll see more than 20 tools supported](https://external-secrets.io/latest/provider/aws-secrets-manager/), featuring the well known AWS Secretes Manager, Azure Key Vault, Hashicorp Vault, Akeyless and so on.
 
 And as I like to show solutions that are fully cromprehensible - ideally without a creditcard - I was on the lookout for a tool, that had a small free plan. But without the need to selfhost the solution, since that would be out of scope for this project. At first glance I thought that [Hashicorp's Vault Secrets](https://developer.hashicorp.com/hcp/docs/vault-secrets) as part of the Hashicorp Cloud Platform (HCP) would be a great choice since so many projects love and use Vault. But sadly External Secrets Operator currently doesn't support HCP Vault Secrets and I would have been forced to [switch to Hashicorp Vault Secrets Operator (VSO)](https://developer.hashicorp.com/hcp/docs/vault-secrets/integrations/kubernetes), which is for sure also an interesting project. But I wanted to stick with the External Secrets Operator since it's wide support for providers and it looks as it could develop into the defacto standard in external secrets integration in Kubernetes.
 
@@ -933,7 +933,7 @@ Copy the contents of the `aws-creds.conf` into the value field in Doppler. The C
 
 ![](docs/doppler-aws-creds-multiline.png)
 
-Don't forget so click on `save`. 
+Don't forget so click on `save`.
 
 
 
@@ -1004,14 +1004,14 @@ spec:
     namespace: external-secrets
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     syncOptions:
     - CreateNamespace=true
     retry:
       limit: 1
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -1031,7 +1031,7 @@ https://external-secrets.io/latest/provider/doppler/#authentication
 
 https://external-secrets.io/latest/introduction/overview/#secretstore
 
-> The idea behind the `SecretStore` resource is to separate concerns of authentication/access and the actual Secret and configuration needed for workloads. The ExternalSecret specifies what to fetch, the SecretStore specifies how to access. 
+> The idea behind the `SecretStore` resource is to separate concerns of authentication/access and the actual Secret and configuration needed for workloads. The ExternalSecret specifies what to fetch, the SecretStore specifies how to access.
 
 In this project I opted for the similar `ClusterSecretStore`. As [the docs state](https://external-secrets.io/latest/introduction/overview/#clustersecretstore):
 
@@ -1065,7 +1065,7 @@ The External Secrets Operator will create a Secret that's similar to the one men
 
 ```shell
 CREDS: |+
-[default] 
+[default]
 aws_access_key_id = yourAccessKeyIdHere
 aws_secret_access_key = yourSecretAccessKeyHere
 ```
@@ -1129,14 +1129,14 @@ spec:
     namespace: external-secrets
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     syncOptions:
     - CreateNamespace=true
     retry:
       limit: 1
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -1161,15 +1161,15 @@ Therefore let's give our `external-secrets-config` more `syncPolicy.retry.limit`
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
 
 ### Point the Crossplane AWS ProviderConfig to our External Secret created Secret from Doppler
 
-We need to change our `ProviderConfig` at [`upbound/provider-aws/provider-eos/provider-config-aws.yaml`](upbound/provider-aws/provider-eos/provider-config-aws.yaml) to use another Secret name and namespace: 
+We need to change our `ProviderConfig` at [`upbound/provider-aws/provider-eos/provider-config-aws.yaml`](upbound/provider-aws/provider-eos/provider-config-aws.yaml) to use another Secret name and namespace:
 
 ```yaml
 apiVersion: aws.upbound.io/v1beta1
@@ -1229,7 +1229,7 @@ jobs:
         uses: actions/checkout@master
 
       - name: Spin up kind via brew
-        run: |          
+        run: |
           echo "--- Create kind cluster"
           kind create cluster --image "kindest/node:$KIND_NODE_VERSION" --wait 5m
 
@@ -1243,7 +1243,7 @@ jobs:
 
           echo " Install & configure ArgoCD via Kustomize - see https://stackoverflow.com/a/71692892/4964553"
           kubectl apply -k argocd/install
-          
+
           echo "--- Wait for Argo to become ready"
           kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server --namespace argocd --timeout=300s
 
@@ -1253,7 +1253,7 @@ jobs:
       - name: Use ArgoCD's AppOfApps pattern to deploy all Crossplane components
         run: |
           echo "--- Let Argo do it's magic installing all Crossplane components"
-          kubectl apply -n argocd -f argocd/crossplane-eso-app-of-apps.yaml 
+          kubectl apply -n argocd -f argocd/crossplane-eso-app-of-apps.yaml
 
       - name: Check crossplane status
         run: |
@@ -1299,7 +1299,7 @@ spec:
     blockPublicPolicy: false
     ignorePublicAcls: false
     restrictPublicBuckets: false
-    bucketRef: 
+    bucketRef:
       name: crossplane-argocd-s3-bucket
     region: eu-central-1
 ---
@@ -1311,7 +1311,7 @@ spec:
   forProvider:
     rule:
       - objectOwnership: ObjectWriter
-    bucketRef: 
+    bucketRef:
       name: crossplane-argocd-s3-bucket
     region: eu-central-1
 ---
@@ -1322,7 +1322,7 @@ metadata:
 spec:
   forProvider:
     acl: "public-read"
-    bucketRef: 
+    bucketRef:
       name: crossplane-argocd-s3-bucket
     region: eu-central-1
 ---
@@ -1334,7 +1334,7 @@ spec:
   forProvider:
     indexDocument:
       - suffix: index.html
-    bucketRef: 
+    bucketRef:
       name: crossplane-argocd-s3-bucket
     region: eu-central-1
 ```
@@ -1404,12 +1404,12 @@ spec:
   # 'Resource not found in cluster: pkg.crossplane.io/v1/Provider:provider-aws-s3'
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -1560,12 +1560,12 @@ spec:
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -1635,12 +1635,12 @@ spec:
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -1685,9 +1685,9 @@ This will add a few resources to the Target cluster like `ServiceAccount`, `Clus
 ```shell
 $ argocd cluster add deploy-target-eks
 WARNING: This will create a service account `argocd-manager` on the cluster referenced by context `deploy-target-eks` with full cluster level privileges. Do you want to continue [y/N]? y
-INFO[0002] ServiceAccount "argocd-manager" already exists in namespace "kube-system" 
-INFO[0002] ClusterRole "argocd-manager-role" updated    
-INFO[0002] ClusterRoleBinding "argocd-manager-role-binding" updated 
+INFO[0002] ServiceAccount "argocd-manager" already exists in namespace "kube-system"
+INFO[0002] ClusterRole "argocd-manager-role" updated
+INFO[0002] ClusterRoleBinding "argocd-manager-role-binding" updated
 Cluster 'https://736F91649BD7B7A70846AD9F8363EDA8.yl4.eu-central-1.eks.amazonaws.com' added
 ```
 
@@ -1762,12 +1762,12 @@ spec:
   # 'Resource not found in cluster: pkg.crossplane.io/v1/Provider:provider-aws-s3'
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -1798,7 +1798,7 @@ data:
   ...
   # add an additional local user with apiKey capabilities for provider-argocd
   # see https://github.com/crossplane-contrib/provider-argocd?tab=readme-ov-file#getting-started-and-documentation
-  accounts.provider-argocd: apiKey      
+  accounts.provider-argocd: apiKey
 ```
 
 As [the ArgoCD docs about user management](https://argo-cd.readthedocs.io/en/stable/operator-manual/user-management/#local-usersaccounts) state this is not enough:
@@ -1815,7 +1815,7 @@ metadata:
 data:
   # For the provider-argocd user we need to add an additional rbac-rule
   # see https://github.com/crossplane-contrib/provider-argocd?tab=readme-ov-file#create-a-new-argo-cd-user
-  policy.csv: "g, provider-argocd, role:admin"      
+  policy.csv: "g, provider-argocd, role:admin"
 ```
 
 Don't forget to add this patch into the []`kustomization.yaml`](argocd/install/kustomization.yaml)!
@@ -1905,7 +1905,7 @@ Our GitHub Actions workflow now also integrates the Secret creation:
         run: |
           echo "--- Access the ArgoCD server with a port-forward in the background, see https://stackoverflow.com/a/72983554/4964553"
           kubectl port-forward -n argocd --address='0.0.0.0' service/argocd-server 8443:443 &
-          
+
           echo "--- Wait shortly to let the port forward come available"
           sleep 5
 
@@ -1973,12 +1973,12 @@ spec:
     server: https://kubernetes.default.svc
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -2012,9 +2012,9 @@ The `providerConfigRef.name.argocd-provider` references our `ProviderConfig`, wh
 
 As the docs state https://marketplace.upbound.io/providers/crossplane-contrib/provider-argocd/v0.6.0/resources/cluster.argocd.crossplane.io/Cluster/v1alpha1
 
-`kubeconfigSecretRef' is described at what we need: 
+`kubeconfigSecretRef' is described at what we need:
 
-> KubeconfigSecretRef contains a reference to a Kubernetes secret entry that contains a raw kubeconfig in YAML or JSON. 
+> KubeconfigSecretRef contains a reference to a Kubernetes secret entry that contains a raw kubeconfig in YAML or JSON.
 
 The Secret containing the exact EKS kubeconfig is named `eks-cluster-kubeconfig` by our EKS Configuration and resides in the `default` namespace.
 
@@ -2077,12 +2077,12 @@ spec:
     server: deploy-target-eks
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -2095,7 +2095,7 @@ kubectl apply -f argocd/applications/microservice-api-spring-boot.yaml
 ```
 
 
-But we get the following error in Argo: 
+But we get the following error in Argo:
 
 ```shell
 cluster 'deploy-target-eks' has not been configured
@@ -2130,12 +2130,12 @@ spec:
     name: deploy-target-eks
   syncPolicy:
     automated:
-      prune: true    
+      prune: true
     retry:
       limit: 5
       backoff:
-        duration: 5s 
-        factor: 2 
+        duration: 5s
+        factor: 2
         maxDuration: 1m
 ```
 
@@ -2149,7 +2149,7 @@ If everything went fine, our App should be deployed by ArgoCD:
 ![](docs/first-successful-application-deployment-to-target-eks-cluster.png)
 
 
-Finally a full cycle is possible - from full bootstrap of ArgoCD & Crossplane Managed cluster to target EKS cluster creation in AWS via Crossplane to configuring that one in Argo and finally deploying an App dynamically referencing this Cluster! 
+Finally a full cycle is possible - from full bootstrap of ArgoCD & Crossplane Managed cluster to target EKS cluster creation in AWS via Crossplane to configuring that one in Argo and finally deploying an App dynamically referencing this Cluster!
 
 
 
@@ -2165,7 +2165,7 @@ pod/crossplane-8676c674b6-zsrns condition met
 --- Wait until AWS Provider is up and running (now prefaced with until to prevent Error from server (NotFound): providers.pkg.crossplane.io 'upbound-provider-aws-s3' not found)
 error: timed out waiting for the condition on providers/upbound-provider-aws-s3
 Error: Process completed with exit code 1.
-``` 
+```
 
 This indicated, that the `upbound-provider-aws-s3` didn't came up anymore.
 
