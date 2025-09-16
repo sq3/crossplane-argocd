@@ -41,6 +41,8 @@ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.pas
 # export DOPPLER_SERVICE_TOKEN="dp.st.dev.dopplerservicetoken"
 kubectl create secret generic doppler-token-auth-api --from-literal dopplerToken="$DOPPLER_SERVICE_TOKEN"
 
+kubectl create namespace crossplane-system
+
 kubectl create secret generic aws-creds -n crossplane-system --from-file=creds=./aws-creds.conf
 
 # Prepare Secret with ArgoCD API Token for Crossplane ArgoCD Provider (port forward can be run in subshell appending ' &' + Ctrl-C and beeing deleted after running create-argocd-api-token-secret.sh via 'fg 1%' + Ctrl-C)
