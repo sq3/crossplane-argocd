@@ -30,11 +30,14 @@ jobs:
         with:
           node-version: '18'
           cache: 'yarn'
+          cache-dependency-path: backstage/yarn.lock
 
       - name: Install dependencies
+        working-directory: ./backstage
         run: yarn install --frozen-lockfile
 
       - name: Build Backstage
+        working-directory: ./backstage
         run: yarn build:backend
 
       - name: Log in to Container Registry
